@@ -4,9 +4,9 @@ import SDKContainer from './SDKContainer'
 
 export default function Home() {
   return (
-    <main className={styles.main}>
+    <>
       <SDKContainer>
       </SDKContainer>
-    </main>
+    </>
   )
 }
