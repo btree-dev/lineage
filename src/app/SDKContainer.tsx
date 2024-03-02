@@ -15,7 +15,11 @@ import {
   send_personal_sign,
 } from '@/app/SignHelpers';
 import NftCreator from "./components/nft-creator";
-import contract from "./abi/aiwin.json";
+import contract from "./abi/LLModels.json";
+import ContentCreator from "./components/content-creator";
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css';
+import Image from 'next/image'
 
 declare global {
   interface Window {
@@ -331,127 +335,54 @@ export default function SDKContainer() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main style={{ textAlign: "center"}}>
-        <h1>Lineage.ai</h1>
-        <div className={"info-section"}>
-          <>
-            {`Connected chain: ${chain}`}
-            <p></p>
-            {`Connected account: ${account}`}
-            <p></p>
-            {`Response: ${response}`}
-            <p></p>
-            {`Connected: ${connected}`}
-
-            {serviceStatus?.connectionStatus === ConnectionStatus.WAITING && (
-              <div>Waiting for Metamask to link the connection...</div>
-            )}
-            <p>ChannelId: {serviceStatus?.channelConfig?.channelId}</p>
-            <p>{`Expiration: ${serviceStatus?.channelConfig?.validUntil ?? ''}`}</p>
-          </>
-        </div>
-        <div style={{ textAlign: "center" }}>
+      <div style={{ textAlign: "right" }}>
           {connected ? (
             <div>
               <button
-                className={"button-normal"}
-                style={{ padding: 10, margin: 10 }}
-                onClick={connect}>
-                Request Accounts
-              </button>
-
-              <button
-                className={"button-normal"}
-                style={{ padding: 10, margin: 10 }}
-                onClick={eth_signTypedData_v4}
+                className={"button-danger"}
+                style={{ padding: 10, margin: 10, backgroundColor: 'red' }}
+                onClick={terminate}
               >
-                eth_signTypedData_v4
-              </button>
-
-              <button
-                className={"button-normal"}
-                style={{ padding: 10, margin: 10 }}
-                onClick={eth_personal_sign}
-              >
-                personal_sign
-              </button>
-
-              <button
-                className={"button-normal"}
-                style={{ padding: 10, margin: 10 }}
-                onClick={sendTransaction}
-              >
-                Send Transaction
-              </button>
-
-              { activeProvider?.chainId === '0x1' ? (
-                <button
-                  className={'button-normal'}
-                  style={{ padding: 10, margin: 10 }}
-                  onClick={() => changeNetwork('0x5')}
-                >
-                  Switch to Goerli
-                </button>
-              ) : (
-                <button
-                  className={'button-normal'}
-                  style={{ padding: 10, margin: 10 }}
-                  onClick={() => changeNetwork('0x1')}
-                >
-                  Switch to Mainnet
-                </button>
-              )}
-
-              <button
-                className={"button-normal"}
-                style={{ padding: 10, margin: 10 }}
-                onClick={addEthereumChain}
-              >
-                Add Polygon
-              </button>
-
-              <button
-                className={"button-normal"}
-                style={{ padding: 10, margin: 10 }}
-                onClick={() => changeNetwork('0x89')}
-              >
-                Switch to Polygon
-              </button>
-
-              <button
-                className={"button-normal"}
-                style={{ padding: 10, margin: 10 }}
-                onClick={readOnlyCalls}
-              >
-                readOnlyCalls
+                Disconnect
               </button>
             </div>
           ) : (
             <>
-              <button className={"button-normal"} style={{ padding: 10, margin: 10 }} onClick={connect}>
-                Connect
-              </button>
-
               <button className={"button-normal"} style={{ padding: 10, margin: 10 }} onClick={connectAndSign}>
                 Connect w/ Sign
               </button>
             </>
-
           )}
-
-          <button
-            className={"button-danger"}
-            style={{ padding: 10, margin: 10, backgroundColor: 'red' }}
-            onClick={terminate}
-          >
-            Terminate
-          </button>
         </div>
-
-        <NftCreator
-          abi={contract.abi}
-          connected = {connected}
-          contractAddress={"0x7BE1E743f194469849a0dEfD83Ff13b0ed23d156"}
+        <Image
+          src="/Lineage.png"
+          width={1099}
+          height={209}
+          alt="Lineage.ai"
         />
+
+
+        <Tabs>
+          <TabList>
+            <Tab>Model Cards</Tab>
+            <Tab>Documents</Tab>
+          </TabList>
+
+          <TabPanel>
+            <NftCreator
+            abi={contract}
+            connected = {connected}
+            contractAddress={"0x25E07C738b79aC558A1CF7282F93b04E5516d247"}
+          />
+          </TabPanel>
+          <TabPanel>
+            <ContentCreator
+            abi={contract}
+            connected = {connected}
+            contractAddress={"0x25E07C738b79aC558A1CF7282F93b04E5516d247"}
+          />
+          </TabPanel>
+        </Tabs>
       </main>
     </>
   );

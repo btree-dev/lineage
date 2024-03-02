@@ -6,7 +6,7 @@ import { useDropzone } from "react-dropzone";
 
 
 // React component for NFT creator form
-export default function NftCreator({ contractAddress, abi, connected,  }: { contractAddress: string, abi: any, connected: boolean }) {
+export default function ContentCreator({ contractAddress, abi, connected,  }: { contractAddress: string, abi: any, connected: boolean }) {
   // Hooks for handling form input and submission
   // const { address, isDisconnected } = useAccount();
   // const { data: signer } = useSigner();
@@ -64,7 +64,7 @@ export default function NftCreator({ contractAddress, abi, connected,  }: { cont
       }
       let metadataURL = "test"
       const NFTContract = new Contract(contractAddress, abi, signer);
-      const mintTx = await NFTContract.unpause();
+      const mintTx = await NFTContract.name();
       // const mintTx = await NFTContract.mintAI(metadataURL, 1);
       console.log("mintTx - " + mintTx );
       setTxHash(mintTx.hash);
@@ -129,7 +129,7 @@ export default function NftCreator({ contractAddress, abi, connected,  }: { cont
       console.log("metadataURL 2 - " + metadataURL );
       setSigner(metadataURL);
       const NFTContract = new Contract(contractAddress, abi, signer);
-      //const mintTx = await NFTContract.mintAndRegister(metadataURL, 1);
+      const mintTx = await NFTContract.mintAndRegister(metadataURL, 1);
       console.log("mintTx - " + mintTx );
       setTxHash(mintTx.hash);
       await mintTx.wait();
@@ -213,7 +213,7 @@ export default function NftCreator({ contractAddress, abi, connected,  }: { cont
 
   return (
     <>
-    <h2>Mint Model Cards</h2>
+    <h2>Mint Documents</h2>
     <div className={styles.page_flexBox}>
       <div
         // Check if transaction hash exists to change styling of container
