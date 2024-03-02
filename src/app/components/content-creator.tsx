@@ -15,8 +15,9 @@ export default function ContentCreator({ contractAddress, abi, connected,  }: { 
   const [weightsURL, setWeightsURL] = useState();
   const [jsonFile, setJsonFile] = useState();
   const [weightsFile, setWeightsFile] = useState();
-  const [ModelName, setNFTName] = useState();
-  const [ModelDescription, setModelDescription] = useState();
+  const [docName, setDocName] = useState();
+  const [docDescription, setDocDescription] = useState();
+  const [IpLicense, setIpLicense] = useState();
   const [NFTAttributes, setNFTAttributes] = useState([
     { trait_type: "", value: "" },
   ]);
@@ -30,8 +31,8 @@ export default function ContentCreator({ contractAddress, abi, connected,  }: { 
   const formNotFilled = () => {
     return (
       !jsonFile ||
-      !ModelName ||
-      !ModelDescription 
+      !docName ||
+      !docDescription
     );
   };
 
@@ -95,26 +96,8 @@ export default function ContentCreator({ contractAddress, abi, connected,  }: { 
     onDrop,
   });
 
-  // Functions for adding, updating, and removing NFT attributes
-  const addAttribute = () => {
-    const attribute = { trait_type: "", value: "" };
-    setNFTAttributes([...NFTAttributes, attribute]);
-  };
-
-  const subtractAttribute = (index :number) => {
-    const attributes = [...NFTAttributes];
-    attributes.splice(index, index);
-    setNFTAttributes(attributes);
-  };
-
-  // const updateAttribute = (parameter :string, value : string, index : number) => {
-  //   const attributes = [...NFTAttributes];
-  //   attributes[index][parameter] = value;
-  //   setNFTAttributes(attributes);
-  // };
-
   // Function for minting the NFT and generating metadata
-  const mintModel = async () => {
+  const mintDocument = async () => {
     if (formNotFilled()) {
       setError(true);
       return;
@@ -178,10 +161,10 @@ export default function ContentCreator({ contractAddress, abi, connected,  }: { 
     //Take a look at your Pinata Pinned section, you will see a new file added to you list.   
 
     // Create a metadata object with the NFT's description, image file URL, name, and attributes
-    const metadata2 = {
-      description: ModelDescription,
+    const metadata2 = {docDescription,
+      description: docName,
       image: fileURL,
-      name: ModelName,
+      name: docName,
       attributes: NFTAttributes,
     };
 
@@ -213,7 +196,7 @@ export default function ContentCreator({ contractAddress, abi, connected,  }: { 
 
   return (
     <>
-    <h2>Mint Documents</h2>
+    <h2>Create Content</h2>
     <div className={styles.page_flexBox}>
       <div
         // Check if transaction hash exists to change styling of container
@@ -236,7 +219,7 @@ export default function ContentCreator({ contractAddress, abi, connected,  }: { 
             // Default dropzone content
             <div>
               <p className={styles.dropzone_header}>
-                Drop your model json here, <br /> or{" "}
+                Drop your document json here, <br /> or{" "}
                 <span className={styles.dropzone_upload}>upload</span>
               </p>
               {/* <p className={styles.dropzone_text}>Supports .jpg, .jpeg, .png</p> */}
@@ -246,17 +229,17 @@ export default function ContentCreator({ contractAddress, abi, connected,  }: { 
         <div className={styles.inputs_container}>
           {/* Input field for NFT name */}
           <div className={styles.input_group}>
-            <h3 className={styles.input_label}>Name of Model</h3>
+            <h3 className={styles.input_label}>Content Name</h3>
             {!txHash ? (
               <input
                 className={styles.input}
-                value={ModelName}
-                onChange={(e) => setNFTName(e.target.value as any)}
+                value={docName}
+                onChange={(e) => setDocName(e.target.value as any)}
                 type={"text"}
-                placeholder="Model Name"
+                placeholder="Content Name"
               />
             ) : (
-              <p>{ModelName}</p>
+              <p>{docName}</p>
             )}
           </div>
           {/* Input field for Model description */}
@@ -265,12 +248,26 @@ export default function ContentCreator({ contractAddress, abi, connected,  }: { 
             {!txHash ? (
               <input
                 className={styles.input}
-                onChange={(e) => setModelDescription(e.target.value as any)}
-                value={ModelDescription}
-                placeholder="Model Description"
+                onChange={(e) => setDocDescription(e.target.value as any)}
+                value={docDescription}
+                placeholder="Content Description"
               />
             ) : (
-              <p>{ModelDescription}</p>
+              <p>{docDescription}</p>
+            )}
+          </div>
+                     {/* Select field for IP License */}
+                     <div className={styles.input_group}>
+            <h3 className={styles.input_label}>IP License</h3>
+            {!txHash ? (
+              <select id="ipLicese" name="ipLicese" className={styles.input}>
+                  <option value="openDomain">Open Domain</option>
+                  <option value="freeWithAttribution">Free with Attribution</option>
+                  <option value="paidNoAttribution">Paid, no attribution</option>
+                  <option value="noDerivatives">No derivatives</option>
+              </select> 
+            ) : (
+              <p>{IpLicense}</p>
             )}
           </div>
           <div>
@@ -285,9 +282,9 @@ export default function ContentCreator({ contractAddress, abi, connected,  }: { 
                       : styles.submit_button
                   }
                   disabled={isSubmitting}
-                  onClick={async () => await mintModel()}
+                  onClick={async () => await mintDocument()}
                 >
-                  {isSubmitting ? "Minting Model" : "Mint Model"}
+                  {isSubmitting ? "Creating Document" : "Create Document"}
                 </button>
                 {error ? (
                   <p className={styles.error}>One or more fields is blank</p>
@@ -297,7 +294,7 @@ export default function ContentCreator({ contractAddress, abi, connected,  }: { 
               <div>
                 <h3 className={styles.attribute_input_label}>ADDRESS</h3>
                 <a
-                  href={`https://mumbai.polygonscan.com/tx/${txHash}`}
+                  href={`https://sepolia.etherscan.io/tx/${txHash}`}
                   target="_blank"
                   rel="noreferrer"
                 >
