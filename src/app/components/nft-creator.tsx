@@ -1,0 +1,339 @@
+// Import necessary modules and styles
+import { Contract, ContractRunner, ethers } from "ethers";
+import styles from "../styles/NftCreator.module.css";
+import { useCallback, useState } from "react";
+import { useDropzone } from "react-dropzone";
+
+
+// React component for NFT creator form
+export default function NftCreator({ contractAddress, abi, connected }: { contractAddress: string, abi: any, connected: boolean }) {
+  // Hooks for handling form input and submission
+  // const { address, isDisconnected } = useAccount();
+  // const { data: signer } = useSigner();
+  const [txHash, setTxHash] = useState();
+  const [jsonURL, setJsonURL] = useState();
+  const [weightsURL, setWeightsURL] = useState();
+  const [jsonFile, setJsonFile] = useState();
+  const [weightsFile, setWeightsFile] = useState();
+  const [ModelName, setNFTName] = useState();
+  const [ModelDescription, setModelDescription] = useState();
+  const [NFTAttributes, setNFTAttributes] = useState([
+    { trait_type: "", value: "" },
+  ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(false);
+
+  let isDisconnected:boolean = !connected;
+  let address : string = "";
+
+  // Function to check if all required form fields are filled
+  const formNotFilled = () => {
+    return (
+      !jsonFile ||
+      !ModelName ||
+      !ModelDescription 
+    );
+  };
+
+  let signer: ContractRunner | null | undefined = null;
+
+  // let provider;
+  // if (window.ethereum == null) {
+  
+  //     // If MetaMask is not installed, we use the default provider,
+  //     // which is backed by a variety of third-party services (such
+  //     // as INFURA). They do not have private keys installed,
+  //     // so they only have read-only access
+  //     console.log("MetaMask not installed; using read-only defaults")
+  //     provider = ethers.getDefaultProvider()
+  
+  // } else {
+  
+  //     // Connect to the MetaMask EIP-1193 object. This is a standard
+  //     // protocol that allows Ethers access to make all read-only
+  //     // requests through MetaMask.
+  //     provider = new ethers.BrowserProvider(window.ethereum)
+  
+  //     // It also provides an opportunity to request access to write
+  //     // operations, which will be performed by the private key
+  //     // that MetaMask manages for the user.
+  //     signer = await provider.getSigner();
+  // }
+
+  // Callback function for handling file drop
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    setJsonFile(acceptedFiles[0] as any);
+    setJsonURL(URL.createObjectURL(acceptedFiles[0]) as any);
+  }, []);
+
+  const onDrop2 = useCallback((acceptedFiles: File[]) => {
+    setJsonFile(acceptedFiles[0] as any);
+    setJsonURL(URL.createObjectURL(acceptedFiles[0]) as any);
+  }, []);
+
+  // Hook for handling file upload via drag and drop
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    multiple: false,
+    accept: {
+      "image/png": [".png", ".PNG"],
+      "image/jpeg": [".jpg", ".jpeg"],
+    },
+    onDrop,
+  });
+
+  // Functions for adding, updating, and removing NFT attributes
+  const addAttribute = () => {
+    const attribute = { trait_type: "", value: "" };
+    setNFTAttributes([...NFTAttributes, attribute]);
+  };
+
+  const subtractAttribute = (index :number) => {
+    const attributes = [...NFTAttributes];
+    attributes.splice(index, index);
+    setNFTAttributes(attributes);
+  };
+
+  // const updateAttribute = (parameter :string, value : string, index : number) => {
+  //   const attributes = [...NFTAttributes];
+  //   attributes[index][parameter] = value;
+  //   setNFTAttributes(attributes);
+  // };
+
+  // Function for minting the NFT and generating metadata
+  const mintModel = async () => {
+    if (formNotFilled()) {
+      setError(true);
+      return;
+    }
+
+    setError(false);
+    setIsSubmitting(true);
+
+    try {
+      const NFTContract = new Contract(contractAddress, abi, signer);
+      const metadataURL: string = await generateMetadata();
+      console.log("metadataURL 2 - " + metadataURL );
+      const mintTx = await NFTContract.safeMint(metadataURL, address as any);
+      console.log("mintTx - " + mintTx );
+      setTxHash(mintTx.hash);
+      await mintTx.wait();
+     // setTxHash(NULL);
+    } catch (e) {
+      console.log(e);
+      return;
+    }
+  };
+  let fileURL = '';
+  let resData2 = '';
+
+  // Async function to generate metadata for the NFT
+  const generateMetadata = async () => {
+    try {
+      const pinata_jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIyNGVkNjI2ZC0xZmEwLTQ4NTYtYTA3Yi04ZTg0NzYyOWQ0MmEiLCJlbWFpbCI6Im1vdW50YWlub3Jpb25AcHJvdG9uLm1lIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siaWQiOiJGUkExIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9LHsiaWQiOiJOWUMxIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjljOTVmZWNkNzUxMDY3Y2IyODIzIiwic2NvcGVkS2V5U2VjcmV0IjoiMDEzNDVhNjBiMzQ1NjMyMmQ1YzdkNWY1M2I1YjUxN2E5ZDY4MjQ3Y2M1YTQyMGVjNDYzMTVjZDdlNzBhMDVkMCIsImlhdCI6MTcwOTMzNTAwMH0.m8iFXWEjwIUn5_y_e-aTEGueLTKoBNUy7hxVGnzQ7Ww";
+      console.log("jwt 3- " + pinata_jwt)
+      const formData = new FormData();
+      formData.append("file", jsonFile as any);
+      const metadata = JSON.stringify({
+        name: "File name",
+      });
+      formData.append("pinataMetadata", metadata);
+
+      const options = JSON.stringify({
+        cidVersion: 0,
+      });
+      formData.append("pinataOptions", options);
+
+      const res = await fetch(
+        "https://api.pinata.cloud/pinning/pinFileToIPFS",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${pinata_jwt}`,
+          },
+          body: formData,
+        }
+      );
+      const resData = await res.json();
+      console.log(resData);
+      fileURL = `https://ipfs.io/ipfs/${resData.IpfsHash}`;
+
+      console.log(fileURL); 
+
+    //Take a look at your Pinata Pinned section, you will see a new file added to you list.   
+
+    // Create a metadata object with the NFT's description, image file URL, name, and attributes
+    const metadata2 = {
+      description: ModelDescription,
+      image: fileURL,
+      name: ModelName,
+      attributes: NFTAttributes,
+    };
+
+    const cid = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
+      method: "POST",
+      body: JSON.stringify(metadata2),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${pinata_jwt}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        return res.IpfsHash;
+    });
+
+  } catch (error) {
+    console.log("Error sending File to IPFS: ")
+    console.log(error)
+  }
+
+    // Send a POST request to the api/pinJsonToIpfs.js to store the NFT metadata on IPFS
+    // const { metadataURL } = await fetch("/api/pinJsonToIpfs", {
+    //   method: "POST",
+    //   body: JSON.stringify(metadata),
+    // }).then((res) => res.json());
+  };
+
+
+  return (
+    <>
+    // Main page container
+    <div className={styles.page_flexBox}>
+      <div
+        // Check if transaction hash exists to change styling of container
+        className={
+          !txHash ? styles.page_container : styles.page_container_submitted
+        }
+      >
+        <div className={styles.dropzone_container} {...getRootProps()}>
+          <input {...getInputProps()}></input>
+          {/* Check if an image is uploaded and display it */}
+          {jsonURL ? (
+            <img
+              alt={"NFT Image"}
+              className={styles.nft_image}
+              src={jsonURL}
+            />
+          ) : isDragActive ? (
+            <p className="dropzone-content">Release to drop the files here </p>
+          ) : (
+            // Default dropzone content
+            <div>
+              <p className={styles.dropzone_header}>
+                Drop your model json here, <br /> or{" "}
+                <span className={styles.dropzone_upload}>upload</span>
+              </p>
+              {/* <p className={styles.dropzone_text}>Supports .jpg, .jpeg, .png</p> */}
+            </div>
+          )}
+        </div>
+        <div className={styles.dropzone_container} {...getRootProps()}>
+          <input {...getInputProps()}></input>
+          {/* Check if an image is uploaded and display it */}
+          {weightsURL ? (
+            <img
+              alt={"NFT Image"}
+              className={styles.nft_image}
+              src={weightsURL}
+            />
+          ) : isDragActive ? (
+            <p className="dropzone-content">Release to drop the files here </p>
+          ) : (
+            // Default dropzone content
+            <div>
+              <p className={styles.dropzone_header}>
+                Drop your model weights json here, <br /> or{" "}
+                <span className={styles.dropzone_upload}>upload</span>
+              </p>
+              {/* <p className={styles.dropzone_text}>Supports .jpg, .jpeg, .png</p> */}
+            </div>
+          )}
+        </div>
+        <div className={styles.inputs_container}>
+          {/* Input field for NFT name */}
+          <div className={styles.input_group}>
+            <h3 className={styles.input_label}>Name of Model</h3>
+            {!txHash ? (
+              <input
+                className={styles.input}
+                value={ModelName}
+                onChange={(e) => setNFTName(e.target.value as any)}
+                type={"text"}
+                placeholder="Model Name"
+              />
+            ) : (
+              <p>{ModelName}</p>
+            )}
+          </div>
+          {/* Input field for Model description */}
+          <div className={styles.input_group}>
+            <h3 className={styles.input_label}>Description</h3>
+            {!txHash ? (
+              <input
+                className={styles.input}
+                onChange={(e) => setModelDescription(e.target.value as any)}
+                value={ModelDescription}
+                placeholder="Model Description"
+              />
+            ) : (
+              <p>{ModelDescription}</p>
+            )}
+          </div>
+
+          {!txHash ? (
+            <div className={styles.button_container}>
+              <div className={styles.button} onClick={() => addAttribute()}>
+                Add attribute
+              </div>
+            </div>
+          ) : null}
+          <div>
+            {isDisconnected ? (
+              <p>Connect your wallet to get started</p>
+            ) : !txHash ? (
+              <div>
+                <button
+                  className={
+                    isSubmitting
+                      ? styles.submit_button_submitting
+                      : styles.submit_button
+                  }
+                  disabled={isSubmitting}
+                  onClick={async () => await mintModel()}
+                >
+                  {isSubmitting ? "Minting Model" : "Mint Model"}
+                </button>
+                {error ? (
+                  <p className={styles.error}>One or more fields is blank</p>
+                ) : null}
+              </div>
+            ) : (
+              <div>
+                <h3 className={styles.attribute_input_label}>ADDRESS</h3>
+                <a
+                  href={`https://mumbai.polygonscan.com/tx/${txHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {/* <div className={styles.address_container}>
+                    <div>
+                      {txHash.slice(0, 6)}...{txHash.slice(6, 10)}
+                    </div>
+                    <img
+                      src={
+                        "https://static.alchemyapi.io/images/cw3d/Icon%20Large/etherscan-l.svg"
+                      }
+                      width="20px"
+                      height="20px"
+                    />
+                  </div> */}
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+    </>
+  );
+}
